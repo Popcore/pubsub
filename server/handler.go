@@ -14,7 +14,7 @@ type PubSubManager struct{
 	closeConn   chan chan []byte
 }
 
-func (p pubSubManager) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (p PubSubManager) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		postMessageHandler(w, r, &p)
 	} else {

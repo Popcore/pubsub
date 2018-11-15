@@ -5,42 +5,27 @@ import (
 	"net/http"
 )
 
-// System is a custom type used to hold information about
-// the application
-type System struct {
-	Subscribers []int
-	PubSubChannel chan string
-}
-
 // Server is the custom type used to handle http connections
 type Server struct {
 	Address string
 	Mux *http.ServeMux
-	System *System
 }
 
 // New server returns a concrete Server instance
 func NewServer(addr string) *Server {
-	system := System{
-		Subscribers: []int{},
-		PubSubChannel: make(chan string),
-	}
 
-	p := pubSubHandler{
+	psManager := PubSubManager{
 		subscribers: make(map[chan []byte]bool),
 		closeConn: make(chan chan []byte),
 		openConn: make(chan chan []byte),
-		message: make(chan string),
 	}
-	mux := http.NewServeMux()
-	mux.Handle("/", p)
 
-	go p.Listen()
+	mux := http.NewServeMux()
+	mux.Handle("/", psManager)
 
 	return &Server{
 		Address: addr,
 		Mux: mux,
-		System: &system,
 	}
 }
 
