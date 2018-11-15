@@ -24,7 +24,6 @@ The request JSON payload must contain a message with the following structure: `{
 To broadcast a message open another command line window and issuing the command
 ```
 curl -X POST -d '{"message" : "my test message"}' http://localhost:9090
-
 ``` 
 will send the message to existing subscribers and log the number of open connections.
 
