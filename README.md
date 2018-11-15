@@ -13,18 +13,17 @@ go run main.go
 ```
 
 ## Publishing and Subscribing
-Once the server is up an running clients can subscribe by going to
-http://localhost:9090
+Once the server is up an running clients can subscribe by opening a new command line window and run
+```
+curl http://localhost:9090
+```
+This will start a new session ready to listen to incoming messages.
 
 Messages can be published by sending a POST request to '/'.
 The request JSON payload must contain a message with the following structure: ` {message: "my test message"}`.
-If using curl a request example could look like:
+A request can be sent from another command line window and it could look like:
 `curl -X POST -d '{"message" : "my test message"}' http://localhost:9090`
-
-## To Do
-[] topics
-[] test all the things
-[] better persistence?
+This will broadcast the message to existing subscribers and log the number of open connections.
 
 ## License
 MIT.
