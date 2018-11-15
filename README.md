@@ -21,8 +21,12 @@ This will start a new session ready to listen to incoming messages.
 
 Messages can be published by sending a POST request to '/'.
 The request JSON payload must contain a message with the following structure: `{message: "my test message"}`.
-To broadcast a message open another command line window and issuing the command:
-`curl -X POST -d '{"message" : "my test message"}' http://localhost:9090` will send the message to existing subscribers and log the number of open connections.
+To broadcast a message open another command line window and issuing the command
+```
+curl -X POST -d '{"message" : "my test message"}' http://localhost:9090
+
+``` 
+will send the message to existing subscribers and log the number of open connections.
 
 ## License
 MIT.
