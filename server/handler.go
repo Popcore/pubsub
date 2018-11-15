@@ -7,60 +7,34 @@ import (
 	"encoding/json"
 )
 
-type pubSubHandler struct{
+// pubSubManager manages subscribers and their connections.
+type PubSubManager struct{
 	subscribers map[chan []byte]bool
-	openConn chan chan []byte
-	closeConn chan chan []byte
-	message chan string
+	openConn    chan chan []byte
+	closeConn   chan chan []byte
 }
 
-func (p *pubSubHandler) Listen() {
-	for {
-		select {
-		case s := <- p.openConn:
-			log.Println("subscriber added")
-			p.subscribers[s] = true
-		case s := <- p.closeConn:
-			log.Println("subscriber removed")
-			delete(p.subscribers, s)
-		case s := <- p.message:
-			for subChannel, _ := range p.subscribers {
-				subChannel <- []byte(s)
-			}
-		}
-	}
-}
-
-func (p pubSubHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (p pubSubManager) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		PostMessageHandler(w, r, &p)
+		postMessageHandler(w, r, &p)
 	} else {
-		SubscribeHandler(w, r, &p)
+		subscribeHandler(w, r, &p)
 	}
 }
 
-func SubscribeHandler(w http.ResponseWriter, r *http.Request, p *pubSubHandler) {
-
-	// each connection has its own channel
+func subscribeHandler(w http.ResponseWriter, r *http.Request, p *PubSubManager) {
 	msgChannel := make(chan []byte)
-	p.openConn <- msgChannel
 
+	p.subscribers[msgChannel] = true
+
+	// use the http flusher interface for sse
 	flusher, _ := w.(http.Flusher)
-
-	defer func() {
-		p.closeConn <- msgChannel
-	}()
 
 	notify := w.(http.CloseNotifier).CloseNotify()
 	go func() {
 		<- notify
-		p.closeConn <- msgChannel
+		delete(p.subscribers, msgChannel)
 	}()
-
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	// start listening to incoming messages
 	for {
@@ -75,7 +49,7 @@ type message struct {
 	Body string `json:"message"`
 }
 
-func PostMessageHandler(w http.ResponseWriter, r *http.Request, p *pubSubHandler) {
+func postMessageHandler(w http.ResponseWriter, r *http.Request, p *PubSubManager) {
 	decoder := json.NewDecoder(r.Body)
 	msg := message{}
 	err := decoder.Decode(&msg)
@@ -85,8 +59,11 @@ func PostMessageHandler(w http.ResponseWriter, r *http.Request, p *pubSubHandler
 		return
 	}
 
+	// publish message
 	go func() {
-		p.message <- msg.Body
+		for subChannel, _ := range p.subscribers {
+			subChannel <- []byte(msg.Body)
+		}
 	}()
 
 	// print connected clients
