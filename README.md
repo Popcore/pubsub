@@ -1,10 +1,10 @@
-# Jaak Pub Sub
-A little pub subexercise
+#  Go Pub Sub
+A little pub sub exercise.
 
 ## Build & Run the server
 Build and run the application with
 ```Makefile
-make build && ./build/jaakpubsub
+make build && ./build/pubsub
 ```
 
 Alternatively simply run
