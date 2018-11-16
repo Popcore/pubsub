@@ -1,14 +1,14 @@
 package server
 
 import (
-	"net/http"
+	"encoding/json"
 	"fmt"
 	"log"
-	"encoding/json"
+	"net/http"
 )
 
 // pubSubManager manages subscribers and their connections.
-type PubSubManager struct{
+type PubSubManager struct {
 	subscribers map[chan []byte]bool
 	openConn    chan chan []byte
 	closeConn   chan chan []byte
@@ -32,7 +32,7 @@ func subscribeHandler(w http.ResponseWriter, r *http.Request, p *PubSubManager) 
 
 	notify := w.(http.CloseNotifier).CloseNotify()
 	go func() {
-		<- notify
+		<-notify
 		delete(p.subscribers, msgChannel)
 	}()
 
