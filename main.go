@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/popcore/jaakpubsub/server"
+	"github.com/popcore/pubsub/server"
 )
 
 func main() {
