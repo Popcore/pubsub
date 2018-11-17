@@ -34,6 +34,10 @@ func subscribeHandler(w http.ResponseWriter, r *http.Request, p *PubSubManager) 
 	// use the http flusher interface for sse
 	flusher, _ := w.(http.Flusher)
 
+	// set headers
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Content-Type", "text/event-stream")
+
 	notify := w.(http.CloseNotifier).CloseNotify()
 	go func() {
 		<-notify
