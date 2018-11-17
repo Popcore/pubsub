@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 )
 
 // pubSubManager manages subscribers and their connections.
@@ -12,6 +13,7 @@ type PubSubManager struct {
 	subscribers map[chan []byte]bool
 	openConn    chan chan []byte
 	closeConn   chan chan []byte
+	mux         sync.Mutex
 }
 
 func (p PubSubManager) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +27,9 @@ func (p PubSubManager) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func subscribeHandler(w http.ResponseWriter, r *http.Request, p *PubSubManager) {
 	msgChannel := make(chan []byte)
 
+	p.mux.Lock()
 	p.subscribers[msgChannel] = true
+	p.mux.Unlock()
 
 	// use the http flusher interface for sse
 	flusher, _ := w.(http.Flusher)
@@ -33,7 +37,9 @@ func subscribeHandler(w http.ResponseWriter, r *http.Request, p *PubSubManager) 
 	notify := w.(http.CloseNotifier).CloseNotify()
 	go func() {
 		<-notify
+		p.mux.Lock()
 		delete(p.subscribers, msgChannel)
+		p.mux.Unlock()
 	}()
 
 	// start listening to incoming messages
